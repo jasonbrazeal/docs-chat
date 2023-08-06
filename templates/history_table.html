@@ -1,0 +1,8 @@
+{% for chat in chats %}
+    <tr hx-get="/chat/{{ chat.id }}" hx-target="#history-modal .modal-content" data-target="history-modal" class="modal-trigger">
+        <!-- hover over each row to highlight, click to open a modal with all the chat messages -->
+        <td>{{ chat.created_at }}</td>
+        <td>{{ chat.id }}</td>
+        <td>{{ chat.messages|length }}</td>
+    </tr>
+{% endfor %}

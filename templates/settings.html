@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="container">
+    <h2 class="">Settings</h2>
+    <div class="row">
+      <div class="s12">
+        <p>OpenAI API key:
+          <span id="api-key">{{ api_key_masked or 'None' }}</span>
+        </p>
+      </div>
+    </div>
+    <div class="row">
+      <div class="s12">
+        <button data-target="api-key-modal" class="btn modal-trigger green darken-4">Set OpenAI API key</button>
+      </div>
+    </div>
+</div>
+
+
+<div id="api-key-modal" class="modal">
+  <div class="modal-content">
+    <h4>Set OpenAI API key</h4>
+    <form id="api-key-form">
+      <div class="input-field col s6">
+        <input placeholder="API key" id="api-key-input" name="api-key-input" type="text" class="validate" required>
+        <label for="api-key-input">API key</label>
+      </div>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <a href="#!" id="api-key-cancel" class="modal-close waves-effect btn-flat">Cancel</a>
+    <a hx-post="/api-key" hx-target="#api-key" hx-include="#api-key-form" id="api-key-submit" class="modal-close waves-effect btn-flat">Submit</a>
+  </div>
+</div>
+{% endblock %}

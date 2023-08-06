@@ -1,0 +1,6 @@
+{% for message in chat.messages %}
+    <tr>
+        <td class="">{{ message.sender }}</td>
+        <td class="">{{ message.text }}</td>
+    </tr>
+{% endfor %}

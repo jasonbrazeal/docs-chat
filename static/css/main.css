@@ -1,0 +1,57 @@
+html, body {
+  height: 100%;
+}
+
+#chat-container button {
+display: inline-block;
+}
+
+#chat-backdrop.htmx-indicator {
+  opacity: 0;
+  transition: opacity 500ms ease-in;
+}
+
+#chat-backdrop.htmx-request.htmx-indicator {
+  opacity: 1;
+  display: block;
+}
+
+#chat-backdrop {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  background-color: #22222220;
+  top: 0;
+  display: none;
+}
+
+#backdrop {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  background-color: #22222220;
+  top: 0;
+}
+
+#loader {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+}
+
+#drop-zone {
+    border: 5px solid #303030;
+  }
+
+#drop-zone img {
+    width: 25px;
+    height: 25px;
+}
+
+.drop-zone-dragging {
+  background-color: #1a5e2025;
+}
+
+#history-table tr:hover {
+  background-color: #1a5e2025;
+}

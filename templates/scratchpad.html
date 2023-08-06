@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block body %}
+<div class="">
+
+    <p class="">Welcome to Docs Chat!</p>
+
+        <table class="">
+            <thead class="">
+                <tr>
+                  <th class="">Sender</th>
+                  <th class="">Message</th>
+                </tr>
+              </thead>
+              <tbody class="" id="table-body">
+                  {% include 'table.html' %}
+              </tbody>
+        </table>
+
+        <form id="chat-form" hx-get="/{{ chat_id }}" hx-target="#table-body" hx-swap="beforeend">
+            <label>
+                Enter your message:
+                <input type="text" name="user_message" minlength="1" maxlength="200" required>
+            </label>
+            <button class="">Submit</button>
+        </form>
+
+</div>
+{% endblock %}

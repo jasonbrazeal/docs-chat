@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="container">
+    <h2>Documents</h2>
+
+    <div id="drop-zone" class="row col s12">
+        <img src="static/images/upload.svg">
+        <p class="col s5">Drag one or more files to this drop zone to upload or</p>
+        <form id="document-form" action="/upload" method="post" enctype="multipart/form-data">
+            <input type="file" name="documents" multiple hidden>
+            <button>Select files from your device</button>
+            <!-- <progress id="progress" value="0" max="100"></progress> -->
+        </form>
+    </div>
+
+    {% for doc in documents %}
+    <div class="row col s12 document">{{ doc.filename }}</div>
+    {% endfor %}
+    {% if documents %}
+    <button data-target="clear-docs-modal" class="btn modal-trigger green darken-4">Clear all documents</button>
+    {% endif %}
+
+</div>
+
+<div id="clear-docs-modal" class="modal">
+    <div class="modal-content">
+      <h4>Confirm</h4>
+      <form id="clear-docs-form" action="/clear" method="post">
+        <p>Are you sure you want to clear all documents?</p>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <a href="#!" id="clear-docs-cancel" class="modal-close waves-effect btn-flat">Cancel</a>
+      <a id="clear-docs-submit" class="modal-close waves-effect btn-flat">Yes</a>
+    </div>
+  </div>
+
+
+<div id="backdrop" class="hide">
+
+    <!-- By Sam Herbert (@sherb), for everyone. More @ http://goo.gl/7AJzbL -->
+    <svg id="loader" width="38" height="38" viewBox="0 0 38 38" xmlns="http://www.w3.org/2000/svg" stroke="#1a5e20">
+        <g fill="none" fill-rule="evenodd">
+            <g transform="translate(1 1)" stroke-width="2">
+                <circle stroke-opacity=".5" cx="18" cy="18" r="18"/>
+                <path d="M36 18c0-9.94-8.06-18-18-18">
+                    <animateTransform
+                        attributeName="transform"
+                        type="rotate"
+                        from="0 18 18"
+                        to="360 18 18"
+                        dur="1s"
+                        repeatCount="indefinite"/>
+                </path>
+            </g>
+        </g>
+    </svg>
+
+</div>
+{% endblock %}
