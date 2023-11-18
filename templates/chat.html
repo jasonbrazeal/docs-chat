@@ -22,7 +22,9 @@
             </tr>
             </thead>
             <tbody class="" id="chat-table">
+                {% if chat %}
                 {% include 'chat_table.html' %}
+                {% endif %}
             </tbody>
     </table>
 </div>

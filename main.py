@@ -6,8 +6,8 @@ from shutil import rmtree
 from typing import Annotated, Optional
 
 from chromadb.config import Settings
-from fastapi import FastAPI, Request, Header, UploadFile, Form
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, PlainTextResponse
+from fastapi import FastAPI, Request, Header, UploadFile
+from fastapi.responses import HTMLResponse, RedirectResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from httpx import AsyncClient
@@ -17,7 +17,7 @@ from langchain.llms import OpenAI
 from langchain.schema.document import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores import Chroma
-from openai import Completion, ChatCompletion
+# from openai import Completion, ChatCompletion
 from pypdf import PdfReader
 from sqlmodel import Session, select
 from sqlalchemy.exc import NoResultFound
@@ -28,8 +28,8 @@ logging.basicConfig()
 logging.getLogger().setLevel(getenv('LOGLEVEL', 'INFO'))
 logger = logging.getLogger(__name__)
 
-DOCS_PATH = Path().home() / 'vectorstore'
-DB_PATH = Path().home() / 'chat.db'
+DOCS_PATH = Path(__file__).parent / 'vectorstore'
+DB_PATH = Path(__file__).parent / 'chat.db'
 MAX_FILESIZE_MB = 100
 
 db_engine = create_db_engine(DB_PATH)
@@ -40,8 +40,8 @@ app.mount('/static', StaticFiles(directory='static'), name='static')
 
 client = AsyncClient()
 
-EMBEDDINGS = OpenAIEmbeddings(openai_api_key='invalid key')
-LLM = OpenAI(openai_api_key='invalid key')
+EMBEDDINGS = OpenAIEmbeddings(openai_api_key='no key')
+LLM = OpenAI(openai_api_key='no key')
 with Session(db_engine) as session:
     statement = select(ApiKey)
     results = session.exec(statement)

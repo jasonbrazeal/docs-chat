@@ -1,20 +1,24 @@
 {% extends "base.html" %}
 {% block body %}
 <div class="container">
-    <h2>Documents</h2>
+    <div class="row">
+        <h2 class="col s12">Documents</h2>
+    </div>
 
-    <div id="drop-zone" class="row col s12">
-        <img src="static/images/upload.svg">
-        <p class="col s5">Drag one or more files to this drop zone to upload or</p>
-        <form id="document-form" action="/upload" method="post" enctype="multipart/form-data">
-            <input type="file" name="documents" multiple hidden>
-            <button>Select files from your device</button>
-            <!-- <progress id="progress" value="0" max="100"></progress> -->
-        </form>
+    <div class="row">
+        <div id="drop-zone" class="col s12">
+            <img src="static/images/upload.svg">
+            <p class="col s5">Drag one or more files to this drop zone to upload or</p>
+            <form id="document-form" action="/upload" method="post" enctype="multipart/form-data">
+                <input type="file" name="documents" multiple hidden>
+                <button>Select files from your device</button>
+                <!-- <progress id="progress" value="0" max="100"></progress> -->
+            </form>
+        </div>
     </div>
 
     {% for doc in documents %}
-    <div class="row col s12 document">{{ doc.filename }}</div>
+    <div class="row document">{{ doc.filename }}</div>
     {% endfor %}
     {% if documents %}
     <button data-target="clear-docs-modal" class="btn modal-trigger green darken-4">Clear all documents</button>

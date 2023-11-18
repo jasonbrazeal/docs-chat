@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
 {% block body %}
-<div class="container">
-    <h2>Welcome to Docs Chat!</h2>
-    <p class="">Lorem, ipsum dolor sit amet consectetur adipisicing elit. Saepe, doloremque velit recusandae nam neque aliquam quidem, veniam in distinctio dignissimos sit id omnis excepturi quia ipsum! Molestias temporibus quibusdam reiciendis.</p>
-    <a href="/documents"><button>Upload Documents</button></a>
-    <a href="/chat"><button>Chat with AI about Documents</button></a>
-    <a href="/settings"><button>Set OpenAI API key</button></a>
-</div>
+    <div id="index">
+        <h2 class="">Welcome to Docs Chat!</h2>
+        <p class="">This application enables you to upload your documents and have a chat about them with a conversational AI. It is powered by OpenAI's GPT-4 model and uses the Completions API for generating messages. You will need to set an API key before having conversations with the chatbot.</p>
+        <a href="/documents">Upload Documents</a>
+        <a href="/chat">Chat with AI about Documents</a>
+        <a href="/settings">Set OpenAI API key</a>
+    </div>
 {% endblock %}

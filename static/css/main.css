@@ -55,3 +55,7 @@ display: inline-block;
 #history-table tr:hover {
   background-color: #1a5e2025;
 }
+
+#index {
+  display: grid;
+}

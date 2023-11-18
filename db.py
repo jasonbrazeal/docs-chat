@@ -5,7 +5,7 @@ from enum import auto, Enum
 from pathlib import Path
 from typing import List, Optional
 
-from sqlmodel import Field, Session, SQLModel, create_engine, select, Relationship
+from sqlmodel import Field, Session, SQLModel, create_engine, Relationship
 
 
 class Sender(Enum):
@@ -87,8 +87,8 @@ def init_db(engine, num_chats=2):
         session.commit()
 
 if __name__ == '__main__':
-    DB_PATH = Path('/home/jason/chat.db')
+    DB_PATH = Path('./chat.db')
     DB_PATH.unlink(missing_ok=True)
     db_engine = create_db_engine(str(DB_PATH))
     create_db(db_engine)
-    init_db(db_engine)
+    # init_db(db_engine)
