@@ -1,4 +1,5 @@
 import logging
+from contextlib import asynccontextmanager
 from io import BytesIO
 from os import getenv
 from pathlib import Path
@@ -11,13 +12,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from httpx import AsyncClient
-from langchain.chains import RetrievalQA
-from langchain.embeddings.openai import OpenAIEmbeddings
-from langchain.llms import OpenAI
-from langchain.schema.document import Document
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.vectorstores import Chroma
-# from openai import Completion, ChatCompletion
+from openai import OpenAI
 from pypdf import PdfReader
 from sqlmodel import Session, select
 from sqlalchemy.exc import NoResultFound
@@ -34,36 +29,31 @@ MAX_FILESIZE_MB = 100
 
 db_engine = create_db_engine(DB_PATH)
 
-app = FastAPI()
-templates = Jinja2Templates(directory='templates')
-app.mount('/static', StaticFiles(directory='static'), name='static')
-
-client = AsyncClient()
-
-EMBEDDINGS = OpenAIEmbeddings(openai_api_key='no key')
-LLM = OpenAI(openai_api_key='no key')
-with Session(db_engine) as session:
-    statement = select(ApiKey)
-    results = session.exec(statement)
-    api_keys = list(results)
-    try:
-        api_key = api_keys[0]
-        EMBEDDINGS = OpenAIEmbeddings(openai_api_key=api_key.cred)
-        LLM = OpenAI(openai_api_key=api_key.cred)
-    except IndexError:
-        logger.info('No API key found in db')
-
-
-@app.on_event('shutdown')
-async def shutdown_event():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    client = AsyncClient()
+    EMBEDDINGS = None
+    LLM = None
+    with Session(db_engine) as session:
+        statement = select(ApiKey)
+        results = session.exec(statement)
+        api_keys = list(results)
+        if api_keys:
+            api_key = api_keys[0]
+            LLM = OpenAI(openai_api_key=api_key.cred, model_name='gpt-3.5-turbo')
+        else:
+            logger.info('No API key found in db')
+    yield
     await client.aclose()
 
+app = FastAPI(lifespan=lifespan)
+templates = Jinja2Templates(directory='templates')
+app.mount('/static', StaticFiles(directory='static'), name='static')
 
 @app.get('/')
 async def index(request: Request, hx_request: Optional[str] = Header(None)):
     context = {'request': request}
     return templates.TemplateResponse('index.html', context)
-
 
 @app.post('/api-key')
 async def api_key(request: Request, hx_request: Optional[str] = Header(None)):
@@ -83,12 +73,11 @@ async def api_key(request: Request, hx_request: Optional[str] = Header(None)):
             session.commit()
             global EMBEDDINGS
             global LLM
-            EMBEDDINGS = OpenAIEmbeddings(openai_api_key=api_key)
-            LLM = OpenAI(openai_api_key=api_key)
+            # TODO: error handling for incorrect api key
+            LLM = OpenAI(openai_api_key=api_key, model_name='gpt-3.5-turbo')
             api_key_masked = (len(api_key) - 4) * '*' + api_key[-4:]
             return PlainTextResponse(api_key_masked)
     return HTMLResponse('<button data-target="api-key-modal" class="btn modal-trigger green darken-4">Set OpenAI API key</button>')
-
 
 @app.get('/settings')
 async def settings(request: Request, hx_request: Optional[str] = Header(None)):
@@ -106,7 +95,6 @@ async def settings(request: Request, hx_request: Optional[str] = Header(None)):
     context = {'request': request, 'api_key_masked': api_key_masked, 'js_file': 'settings.js'}
     return templates.TemplateResponse('settings.html', context)
 
-
 @app.get('/history')
 async def history(request: Request, hx_request: Optional[str] = Header(None)):
     with Session(db_engine) as session:
@@ -117,7 +105,6 @@ async def history(request: Request, hx_request: Optional[str] = Header(None)):
     context = {'request': request, 'chats': chats, 'js_file': 'history.js'}
     return templates.TemplateResponse('history.html', context)
 
-
 @app.get('/chat/new')
 async def new_chat(request: Request, hx_request: Optional[str] = Header(None)):
     with Session(db_engine) as session:
@@ -125,7 +112,6 @@ async def new_chat(request: Request, hx_request: Optional[str] = Header(None)):
         session.add(chat)
         session.commit()
     return RedirectResponse('/chat', status_code=302)
-
 
 @app.get('/chat/{chat_id}')
 async def chat_data(request: Request, chat_id: Annotated[int, Path()], hx_request: Optional[str] = Header(None)):
@@ -135,7 +121,6 @@ async def chat_data(request: Request, chat_id: Annotated[int, Path()], hx_reques
         for message in chat.messages:
             chat_data += f'<p>{message.sender}: {message.text}</p>'
     return HTMLResponse(chat_data)
-
 
 @app.get('/chat')
 @app.post('/chat')
@@ -150,6 +135,8 @@ async def chat(request: Request, hx_request: Optional[str] = Header(None)):
             chat = chats[0]
             chat.messages = list(reversed(chat.messages))
             context['chat'] = chat
+        else:
+            return RedirectResponse('/chat/new', status_code=302)
 
         if hx_request:
             form = await request.form()
@@ -165,7 +152,7 @@ async def chat(request: Request, hx_request: Optional[str] = Header(None)):
             qa = RetrievalQA.from_chain_type(llm=LLM, chain_type='stuff', retriever=retriever)
             bot_message = qa.run(user_message)
             context['messages'] = [Message(text=user_message, sender=Sender.USER.name, chat_id=chat.id),
-                                Message(text=bot_message, sender=Sender.BOT.name, chat_id=chat.id)]
+                                   Message(text=bot_message, sender=Sender.BOT.name, chat_id=chat.id)]
             for message in context['messages']:
                 session.add(message)
             session.commit()
@@ -175,7 +162,6 @@ async def chat(request: Request, hx_request: Optional[str] = Header(None)):
 
     return templates.TemplateResponse('chat.html', context)
 
-
 @app.get('/documents')
 async def documents(request: Request, hx_request: Optional[str] = Header(None)):
     with Session(db_engine) as session:
@@ -184,7 +170,6 @@ async def documents(request: Request, hx_request: Optional[str] = Header(None)):
         documents = list(results)
     context = {'request': request, 'documents': documents, 'js_file': 'documents.js'}
     return templates.TemplateResponse('documents.html', context)
-
 
 @app.post('/upload')
 async def upload(request: Request, documents: list[UploadFile], hx_request: Optional[str] = Header(None)):
@@ -211,17 +196,19 @@ async def upload(request: Request, documents: list[UploadFile], hx_request: Opti
                 for i, page in enumerate(pdf_reader.pages)
             ]
             all_document_objs.extend(document_objs)
-    if all_document_objs:
-        splitter = RecursiveCharacterTextSplitter()
-        docs_split = splitter.split_documents(all_document_objs)
-        vectordb = Chroma.from_documents(documents=docs_split,
-                                        embedding=EMBEDDINGS,
-                                        persist_directory=str(DOCS_PATH))
-        # save vectorstore to disk
-        vectordb.persist()
+    if not all_document_objs:
+        return RedirectResponse('/documents', status_code=302)
+
+    splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
+    docs_split = splitter.split_documents(all_document_objs)
+
+    vectordb = Chroma.from_documents(documents=docs_split,
+                                     embedding=EMBEDDINGS,
+                                     persist_directory=str(DOCS_PATH))
+    # save vectorstore to disk
+    vectordb.persist()
 
     return RedirectResponse('/documents', status_code=302)
-
 
 @app.post('/clear')
 async def clear(request: Request, hx_request: Optional[str] = Header(None)):

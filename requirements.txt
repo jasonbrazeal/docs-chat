@@ -7,7 +7,6 @@ ipython
 jinja2
 jupyterlab
 jupytext
-langchain
 mypy
 numpy
 openai
