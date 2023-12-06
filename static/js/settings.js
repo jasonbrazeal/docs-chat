@@ -21,21 +21,19 @@ htmx.on("htmx:onLoadError", function(evt) {
 )
 
 htmx.on("htmx:beforeRequest", function(evt) {
-
-  // settings
-  const apiKeyInput = document.getElementById('api-key-input');
-  if (apiKeyInput) {
-    if (!apiKeyInput.value) {
-      evt.preventDefault()
+  if (evt.detail.requestConfig.verb === 'post') {
+    const apiKeyInput = document.getElementById('api-key-input');
+    if (apiKeyInput) {
+      if (!apiKeyInput.value) {
+        evt.preventDefault();
+      }
     }
   }
-
 });
 
 
 document.addEventListener('DOMContentLoaded', function() {
 
-  // settings
   const apiKeyModalElem = document.getElementById('api-key-modal');
   const apiKeyModal = M.Modal.init(apiKeyModalElem, {
     onOpenEnd: () => {
@@ -48,7 +46,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 
-  // settings
   const apiKeyForm = document.getElementById('api-key-form');
   if (apiKeyForm) {
     apiKeyForm.addEventListener('keypress', (e) => {
@@ -60,6 +57,24 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
+  function submitDelete(e) {
+    const apiKeyDeleteSubmit = document.getElementById('api-key-delete');
+    console.log(apiKeyDeleteSubmit)
+    if (e.code === 'Enter') {
+      e.preventDefault();
+      apiKeyDeleteSubmit.click();
+    }
+  }
+
+  const apiKeyModalDeleteElem = document.getElementById('api-key-modal-delete');
+  const apiKeyModalDelete = M.Modal.init(apiKeyModalDeleteElem, {
+    onOpenEnd: () => {
+      document.addEventListener('keypress', submitDelete);
+    },
+    onCloseEnd: () => {
+      document.removeEventListener('keypress', submitDelete);
+    }
+  });
 
 
 });

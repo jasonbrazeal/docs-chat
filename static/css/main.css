@@ -59,3 +59,11 @@ display: inline-block;
 #index {
   display: grid;
 }
+
+#settings-actions .btn.modal-trigger {
+  width: 8em;
+}
+
+.api-key-check {
+  margin-left: .5em;
+}

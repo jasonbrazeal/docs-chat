@@ -10,8 +10,10 @@
       </div>
     </div>
     <div class="row">
-      <div class="s12">
-        <button data-target="api-key-modal" class="btn modal-trigger green darken-4">Set OpenAI API key</button>
+      <div class="s12" id="settings-actions">
+        <button data-target="api-key-modal" class="btn modal-trigger indigo darken-4">Set key</button>
+        <button data-target="api-key-modal-delete" class="btn modal-trigger indigo darken-4">Delete key</button>
+        <button hx-get="/api-key" hx-target="#api-key" class="btn indigo darken-4">Check key</button>
       </div>
     </div>
 </div>
@@ -19,17 +21,26 @@
 
 <div id="api-key-modal" class="modal">
   <div class="modal-content">
-    <h4>Set OpenAI API key</h4>
+    <h4>Set key</h4>
     <form id="api-key-form">
       <div class="input-field col s6">
         <input placeholder="API key" id="api-key-input" name="api-key-input" type="text" class="validate" required>
-        <label for="api-key-input">API key</label>
       </div>
     </form>
   </div>
   <div class="modal-footer">
     <a href="#!" id="api-key-cancel" class="modal-close waves-effect btn-flat">Cancel</a>
     <a hx-post="/api-key" hx-target="#api-key" hx-include="#api-key-form" id="api-key-submit" class="modal-close waves-effect btn-flat">Submit</a>
+  </div>
+</div>
+
+<div id="api-key-modal-delete" class="modal">
+  <div class="modal-content">
+    <h4>Delete key?</h4>
+  </div>
+  <div class="modal-footer">
+    <a href="#!" id="api-key-delete-cancel" class="modal-close waves-effect btn-flat">Cancel</a>
+    <a hx-delete="/api-key" hx-target="#api-key" id="api-key-delete" class="modal-close waves-effect btn-flat">Submit</a>
   </div>
 </div>
 {% endblock %}

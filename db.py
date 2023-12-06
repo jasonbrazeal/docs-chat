@@ -40,7 +40,7 @@ class PdfDocument(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
 
 
-def create_db_engine(db_path: str):
+def create_db_engine(db_path: Path | str):
     db_url = f'sqlite:///{db_path}'
     engine = create_engine(
         db_url, echo=logging.getLogger().isEnabledFor(logging.DEBUG),
