@@ -3,9 +3,20 @@ import logging
 from datetime import datetime
 from enum import auto, Enum
 from pathlib import Path
+from sys import argv
 from typing import List, Optional
 
+from sqlalchemy.engine.base import Engine
 from sqlmodel import Field, Session, SQLModel, create_engine, Relationship
+
+
+DATA_DIR: Path = Path(__file__).parent / 'data'
+DB_PATH: Path = DATA_DIR / 'chat.db'
+DB_URL = f'sqlite:///{DB_PATH}'
+DB_ENGINE: Engine = create_engine(
+    DB_URL, echo=logging.getLogger().isEnabledFor(logging.DEBUG),
+    connect_args={'check_same_thread': DB_URL.startswith('sqlite')},
+)
 
 
 class Sender(Enum):
@@ -17,6 +28,12 @@ class Chat(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     messages: List['Message'] = Relationship(back_populates='chat')
     created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
+
+    def bot_messages(self):
+        return [message for message in self.messages if message.sender == Sender.BOT]
+
+    def user_messages(self):
+        return [message for message in self.messages if message.sender == Sender.USER]
 
 
 class Message(SQLModel, table=True):
@@ -38,15 +55,6 @@ class PdfDocument(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     filename: str
     created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
-
-
-def create_db_engine(db_path: Path | str):
-    db_url = f'sqlite:///{db_path}'
-    engine = create_engine(
-        db_url, echo=logging.getLogger().isEnabledFor(logging.DEBUG),
-        connect_args={'check_same_thread': db_url.startswith('sqlite')},
-    )
-    return engine
 
 
 def create_db(engine):
@@ -87,8 +95,9 @@ def init_db(engine, num_chats=2):
         session.commit()
 
 if __name__ == '__main__':
-    DB_PATH = Path('./chat.db')
+    if not DATA_DIR.exists():
+        DATA_DIR.mkdir()
     DB_PATH.unlink(missing_ok=True)
-    db_engine = create_db_engine(str(DB_PATH))
-    create_db(db_engine)
-    # init_db(db_engine)
+    create_db(DB_ENGINE)
+    if len(argv) > 1 and argv[1] == '--init':
+        init_db(DB_ENGINE)

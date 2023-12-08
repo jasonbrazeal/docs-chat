@@ -1,7 +1,6 @@
-# database file
-*.db
-docs/
-vectorstore/
+# database file, uploaded docs, vectorstore
+data/
+*.csv
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

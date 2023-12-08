@@ -109,11 +109,32 @@ function dragOffHandler(ev) {
   dropZone.classList.remove('drop-zone-dragging')
 }
 
+function clearDocsSubmit() {
+  const clearDocsForm = document.getElementById('clear-docs-form');
+  clearDocsForm.submit();
+}
+
+function clearDocsSubmitOnEnter(e) {
+  if (e.code === 'Enter') {
+    clearDocsSubmit()
+  }
+}
 
 document.addEventListener('DOMContentLoaded', function() {
   // initialize all modals
-  const allModalElems = document.querySelectorAll('.modal')
-  const allModals = M.Modal.init(allModalElems, {});
+  const clearDocsModalElem = document.getElementById('clear-docs-modal')
+  const clearDocsModal = M.Modal.init(clearDocsModalElem, {
+    onOpenEnd: () => {
+      document.addEventListener('keypress', clearDocsSubmitOnEnter);
+      const clearDocsSubmitButton = document.getElementById('clear-docs-submit')
+      clearDocsSubmitButton.addEventListener('click', clearDocsSubmit);
+    },
+    onCloseEnd: () => {
+      document.removeEventListener('keypress', clearDocsSubmitOnEnter);
+      const clearDocsSubmitButton = document.getElementById('clear-docs-submit')
+      clearDocsSubmitButton.removeEventListener('click', clearDocsSubmit);
+    }
+  });
 
   // document upload
   const dropZone = document.getElementById('drop-zone');
@@ -162,11 +183,5 @@ document.addEventListener('DOMContentLoaded', function() {
         htmx.find('#progress').setAttribute('value', evt.detail.loaded/evt.detail.total * 100)
       });
   }
-
-  const clearDocsSubmit = document.getElementById('clear-docs-submit');
-  clearDocsSubmit.addEventListener('click', () => {
-    const clearDocsForm = document.getElementById('clear-docs-form');
-    clearDocsForm.submit();
-  });
 
 });

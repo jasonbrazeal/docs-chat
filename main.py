@@ -6,50 +6,44 @@ from pathlib import Path
 from shutil import rmtree
 from typing import Annotated, Optional
 
-from chromadb.config import Settings
-from fastapi import FastAPI, Request, Header, UploadFile
-from fastapi.responses import HTMLResponse, RedirectResponse, PlainTextResponse
+from fastapi import FastAPI, Header, Request, UploadFile
+from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from httpx import AsyncClient
-from openai import OpenAI
-from openai import AuthenticationError
-from pypdf import PdfReader
-from sqlmodel import Session, select
+from openai import APIConnectionError, AuthenticationError
 from sqlalchemy.exc import NoResultFound
+from sqlmodel import Session, select
 
-from db import create_db_engine, Message, Sender, Chat, ApiKey, PdfDocument
+from db import ApiKey, Chat, Message, PdfDocument, Sender, DB_ENGINE, DATA_DIR
+from utils import (check_api_key, get_bot_response, get_document_context, save_to_file,
+                   save_to_vectorstore, set_api_key, slugify)
 
 logging.basicConfig()
 logging.getLogger().setLevel(getenv('LOGLEVEL', 'INFO'))
 logger = logging.getLogger(__name__)
 
-DOCS_PATH = Path(__file__).parent / 'vectorstore'
-MAX_FILESIZE_MB = 100
-DB_PATH = Path(__file__).parent / 'chat.db'
-DB_ENGINE = create_db_engine(DB_PATH)
-EMBEDDING_MODEL_NAME = 'text-embedding-ada-002'
-LLM_NAME = 'gpt-3.5-turbo'
-LLM_CLIENT = None
+DOCS_PATH: Path = DATA_DIR / 'pdf'
+MAX_FILESIZE_MB: int = 100
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    client = AsyncClient()
+    client: AsyncClient = AsyncClient()
     with Session(DB_ENGINE) as session:
         statement = select(ApiKey)
         results = session.exec(statement)
         api_keys = list(results)
         if api_keys:
             api_key = api_keys[0]
-            LLM_CLIENT = OpenAI(api_key=api_key.cred)
+            set_api_key(api_key.cred)
         else:
             logger.info('No API key found in db')
     yield
     await client.aclose()
 
-app = FastAPI(lifespan=lifespan)
-templates = Jinja2Templates(directory='templates')
+app: FastAPI = FastAPI(lifespan=lifespan)
+templates: Jinja2Templates = Jinja2Templates(directory='templates')
 app.mount('/static', StaticFiles(directory='static'), name='static')
 
 
@@ -57,6 +51,28 @@ app.mount('/static', StaticFiles(directory='static'), name='static')
 async def index(request: Request, hx_request: Optional[str] = Header(None)):
     context = {'request': request}
     return templates.TemplateResponse('index.html', context)
+
+
+@app.post('/api-key')
+async def api_key_set(request: Request, hx_request: Optional[str] = Header(None)):
+    form = await request.form()
+    api_key = str(form.get('api-key-input', ''))
+    if hx_request and api_key:
+        with Session(DB_ENGINE) as session:
+            statement = select(ApiKey)
+            results = session.exec(statement)
+            try:
+                existing_api_key = results.one()
+                session.delete(existing_api_key)
+            except NoResultFound:
+                pass
+            api_key_obj = ApiKey(cred=api_key)
+            session.add(api_key_obj)
+            session.commit()
+            set_api_key(api_key)
+            api_key_masked = (len(api_key) - 4) * '*' + api_key[-4:]
+            return PlainTextResponse(api_key_masked)
+    return PlainTextResponse('None')
 
 
 @app.delete('/api-key')
@@ -86,35 +102,12 @@ async def api_key_check(request: Request, hx_request: Optional[str] = Header(Non
                 api_key_masked = (len(api_key) - 4) * '*' + api_key[-4:]
             except NoResultFound:
                 api_key = api_key_masked = 'None'
-        LLM_CLIENT = OpenAI(api_key=api_key)
+        set_api_key(api_key)
         try:
-            models = LLM_CLIENT.models.list()
-            logger.debug(models)
-        except AuthenticationError as e:
+            check_api_key()
+        except (AuthenticationError, APIConnectionError) as e:
             return PlainTextResponse(api_key_masked + '<span class="api-key-check">❌</span>')
         return PlainTextResponse(api_key_masked + '<span class="api-key-check">✅</span>')
-
-
-@app.post('/api-key')
-async def api_key_set(request: Request, hx_request: Optional[str] = Header(None)):
-    form = await request.form()
-    api_key = str(form.get('api-key-input', ''))
-    if hx_request and api_key:
-        with Session(DB_ENGINE) as session:
-            statement = select(ApiKey)
-            results = session.exec(statement)
-            try:
-                existing_api_key = results.one()
-                session.delete(existing_api_key)
-            except NoResultFound:
-                pass
-            api_key_obj = ApiKey(cred=api_key)
-            session.add(api_key_obj)
-            session.commit()
-            LLM_CLIENT = OpenAI(api_key=api_key)
-            api_key_masked = (len(api_key) - 4) * '*' + api_key[-4:]
-            return PlainTextResponse(api_key_masked)
-    return PlainTextResponse('None')
 
 
 @app.get('/settings')
@@ -146,7 +139,7 @@ async def history(request: Request, hx_request: Optional[str] = Header(None)):
 
 
 @app.get('/chat/new')
-async def new_chat(request: Request, hx_request: Optional[str] = Header(None)):
+async def chat_new(request: Request, hx_request: Optional[str] = Header(None)):
     with Session(DB_ENGINE) as session:
         chat = Chat()
         session.add(chat)
@@ -159,8 +152,9 @@ async def chat_data(request: Request, chat_id: Annotated[int, Path()], hx_reques
     with Session(DB_ENGINE) as session:
         chat = session.get(Chat, chat_id)
         chat_data = ''
-        for message in chat.messages:
-            chat_data += f'<p>{message.sender}: {message.text}</p>'
+        if chat:
+            for message in chat.messages:
+                chat_data += f'<p>{message.sender}: {message.text}</p>'
     return HTMLResponse(chat_data)
 
 
@@ -175,36 +169,27 @@ async def chat(request: Request, hx_request: Optional[str] = Header(None)):
         chats = list(results)
         if chats:
             chat = chats[0]
-            chat.messages = list(reversed(chat.messages))
             context['chat'] = chat
+            context['messages'] = list(reversed(chat.messages))
         else:
             return RedirectResponse('/chat/new', status_code=302)
 
         if hx_request:
             form = await request.form()
-            user_message = form.get('user_message', '').strip()
+            user_message = str(form.get('user_message', '')).strip()
             if not user_message:
                 return HTMLResponse('')
-            # vectordb = Chroma(
-            #     embedding_function=EMBEDDINGS,
-            #     persist_directory=str(DOCS_PATH),
-            #     client_settings=Settings(anonymized_telemetry=False)
-            # )
-            # retriever = vectordb.as_retriever()
-            # qa = RetrievalQA.from_chain_type(llm=LLM, chain_type='stuff', retriever=retriever)
-            # bot_message = qa.run(user_message)
 
-            # TODO - call to chat completion endpoint with prior messages
-            #      - if vectorstore exists, pull examples from that for the prompt
+            document_context = get_document_context(user_message)
+            bot_message = get_bot_response(user_message, document_context, chat)
 
-            bot_message = 'hello'
-            context['messages'] = [Message(text=user_message, sender=Sender.USER.name, chat_id=chat.id),
-                                   Message(text=bot_message, sender=Sender.BOT.name, chat_id=chat.id)]
-            for message in context['messages']:
-                session.add(message)
+            new_messages = [Message(text=user_message, sender=Sender.USER.name, chat_id=chat.id),
+                            Message(text=bot_message, sender=Sender.BOT.name, chat_id=chat.id)]
+            for m in new_messages:
+                session.add(m)
             session.commit()
             session.refresh(chat)
-            chat.messages = list(reversed(chat.messages))
+            context['messages'] = list(reversed(chat.messages))
             return templates.TemplateResponse('chat_table.html', context)
 
     return templates.TemplateResponse('chat.html', context)
@@ -222,8 +207,9 @@ async def documents(request: Request, hx_request: Optional[str] = Header(None)):
 
 @app.post('/upload')
 async def upload(request: Request, documents: list[UploadFile], hx_request: Optional[str] = Header(None)):
-    all_document_objs = []
-    total_bytes = 0
+    if not DOCS_PATH.exists():
+        DOCS_PATH.mkdir(parents=True)
+    total_bytes: float = 0
     with Session(DB_ENGINE) as session:
         for document in documents:
             file_bytes = BytesIO(await document.read())
@@ -233,29 +219,16 @@ async def upload(request: Request, documents: list[UploadFile], hx_request: Opti
 
             if num_file_megabytes > MAX_FILESIZE_MB:
                 continue
+            total_bytes += num_file_megabytes
 
+            if document.filename is None:
+                continue
             doc = PdfDocument(filename=document.filename)
             session.add(doc)
             session.commit()
 
-            pdf_reader = PdfReader(file_bytes)
-            document_objs = [
-                Document(page_content=page.extract_text(),
-                         metadata={'source': doc.filename, 'page': i})
-                for i, page in enumerate(pdf_reader.pages)
-            ]
-            all_document_objs.extend(document_objs)
-    if not all_document_objs:
-        return RedirectResponse('/documents', status_code=302)
-
-    splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
-    docs_split = splitter.split_documents(all_document_objs)
-
-    vectordb = Chroma.from_documents(documents=docs_split,
-                                     embedding=EMBEDDINGS,
-                                     persist_directory=str(DOCS_PATH))
-    # save vectorstore to disk
-    vectordb.persist()
+            save_to_vectorstore(file_bytes, doc.filename)
+            save_to_file(file_bytes, slugify(doc.filename), DOCS_PATH)
 
     return RedirectResponse('/documents', status_code=302)
 
@@ -269,7 +242,7 @@ async def clear(request: Request, hx_request: Optional[str] = Header(None)):
             session.delete(doc)
         session.commit()
     rmtree(str(DOCS_PATH), ignore_errors=True)
-    DOCS_PATH.mkdir()
+    DOCS_PATH.mkdir(parents=True)
     return RedirectResponse(request.url_for('documents'), status_code=302)
 
 
