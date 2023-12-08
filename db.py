@@ -3,12 +3,16 @@ import logging
 from datetime import datetime
 from enum import auto, Enum
 from pathlib import Path
+from os import getenv
 from sys import argv
 from typing import List, Optional
 
 from sqlalchemy.engine.base import Engine
 from sqlmodel import Field, Session, SQLModel, create_engine, Relationship
 
+logging.basicConfig()
+logging.getLogger().setLevel(getenv('LOGLEVEL', 'INFO'))
+logger = logging.getLogger(__name__)
 
 DATA_DIR: Path = Path(__file__).parent / 'data'
 DB_PATH: Path = DATA_DIR / 'chat.db'
@@ -98,6 +102,8 @@ if __name__ == '__main__':
     if not DATA_DIR.exists():
         DATA_DIR.mkdir()
     DB_PATH.unlink(missing_ok=True)
+    logger.info(f'creating db: {DB_PATH}')
     create_db(DB_ENGINE)
     if len(argv) > 1 and argv[1] == '--init':
+        logger.info('adding some fake data to db')
         init_db(DB_ENGINE)

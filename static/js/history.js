@@ -20,10 +20,20 @@ htmx.on("htmx:beforeRequest", function(evt) {
 
 });
 
+function historyModalClose() {
+  const historyModalCloseElem = document.getElementById('history-modal-close');
+  historyModalCloseElem.click();
+}
 
 document.addEventListener('DOMContentLoaded', function() {
-  // initialize all modals
-  const allModalElems = document.querySelectorAll('.modal')
-  const allModals = M.Modal.init(allModalElems, {});
+  const historyModalElem = document.getElementById('history-modal');
+  const historyModal = M.Modal.init(historyModalElem, {
+    onOpenEnd: () => {
+      document.addEventListener('keypress', historyModalClose);
+    },
+    onCloseEnd: () => {
+      document.removeEventListener('keypress', historyModalClose);
+    }
+  });
 });
 

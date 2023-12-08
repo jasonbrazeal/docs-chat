@@ -17,7 +17,7 @@ from sqlmodel import Session, select
 
 from db import ApiKey, Chat, Message, PdfDocument, Sender, DB_ENGINE, DATA_DIR
 from utils import (check_api_key, get_bot_response, get_document_context, save_to_file,
-                   save_to_vectorstore, set_api_key, slugify)
+                   process_pdf_bytes, set_api_key, slugify)
 
 logging.basicConfig()
 logging.getLogger().setLevel(getenv('LOGLEVEL', 'INFO'))
@@ -227,7 +227,7 @@ async def upload(request: Request, documents: list[UploadFile], hx_request: Opti
             session.add(doc)
             session.commit()
 
-            save_to_vectorstore(file_bytes, doc.filename)
+            process_pdf_bytes(file_bytes, doc.filename)
             save_to_file(file_bytes, slugify(doc.filename), DOCS_PATH)
 
     return RedirectResponse('/documents', status_code=302)
