@@ -1,5 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Cousine&display=swap');
+
 html, body {
   height: 100%;
+  font-family: 'Cousine', 'sans-serif';
 }
 
 #chat-container button {
@@ -23,6 +26,16 @@ display: inline-block;
   background-color: #22222220;
   top: 0;
   display: none;
+}
+
+#chat-interface {
+  height: 100vh;
+  width: 100%;
+  border: none;
+}
+
+#chat-container {
+  padding: 5em 2em;
 }
 
 #backdrop {

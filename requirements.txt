@@ -2,6 +2,7 @@ boto3
 chromadb
 faiss-cpu
 fastapi
+gradio
 httpx
 ipython
 jinja2

@@ -1,10 +1,8 @@
 {% extends 'base.html' %}
 {% block body %}
-<div id="chat-container" class="container">
+<div id="chat-container">
 
-    <h2>Chat</h2>
-
-    <form id="chat-form" hx-post="/chat" hx-target="#chat-table" hx-indicator="#chat-backdrop">
+    <!-- <form id="chat-form" hx-post="/chat" hx-target="#chat-table" hx-indicator="#chat-backdrop">
         <label>
             Enter your message:
             <input type="text" name="user_message" minlength="1" maxlength="200" required>
@@ -13,8 +11,9 @@
     </form>
     <button id="submit-message">Submit</button>
     <a href="/history"><button>View Chat History</button></a>
-    <a href="/chat/new"><button>Start New Chat</button></a>
-    <table class="">
+    <a href="/chat/new"><button>Start New Chat</button></a> -->
+    <iframe src="/ui/chat?__theme=light" id="chat-interface" title="Chat" scrolling="no"></iframe>
+    <!-- <table class="">
         <thead class="">
             <tr>
                 <th class="">Sender</th>
@@ -26,7 +25,7 @@
                 {% include 'chat_table.html' %}
                 {% endif %}
             </tbody>
-    </table>
+    </table> -->
 </div>
 
 <div id="chat-backdrop" class="htmx-indicator">

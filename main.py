@@ -6,6 +6,8 @@ from pathlib import Path
 from shutil import rmtree
 from typing import Annotated, Optional
 
+import gradio as gr
+
 from fastapi import FastAPI, Header, Request, UploadFile
 from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -16,6 +18,7 @@ from sqlalchemy.exc import NoResultFound
 from sqlmodel import Session, select
 
 from db import ApiKey, Chat, Message, PdfDocument, Sender, DB_ENGINE, DATA_DIR
+from gradio_chat import chat_interface
 from utils import (check_api_key, get_bot_response, get_document_context, save_to_file,
                    process_pdf_bytes, set_api_key, slugify)
 
@@ -46,6 +49,7 @@ app: FastAPI = FastAPI(lifespan=lifespan)
 templates: Jinja2Templates = Jinja2Templates(directory='templates')
 app.mount('/static', StaticFiles(directory='static'), name='static')
 
+app = gr.mount_gradio_app(app, chat_interface, path='/ui/chat')
 
 @app.get('/')
 async def index(request: Request, hx_request: Optional[str] = Header(None)):
@@ -159,7 +163,7 @@ async def chat_data(request: Request, chat_id: Annotated[int, Path()], hx_reques
 
 
 @app.get('/chat')
-@app.post('/chat')
+# @app.post('/chat')
 async def chat(request: Request, hx_request: Optional[str] = Header(None)):
     context = {'request': request, 'js_file': 'chat.js'}
     # load last conversation if one is present
@@ -174,24 +178,24 @@ async def chat(request: Request, hx_request: Optional[str] = Header(None)):
         else:
             return RedirectResponse('/chat/new', status_code=302)
 
-        if hx_request:
-            form = await request.form()
-            user_message = str(form.get('user_message', '')).strip()
-            if not user_message:
-                return HTMLResponse('')
+        # if hx_request:
+        #     form = await request.form()
+        #     user_message = str(form.get('user_message', '')).strip()
+        #     if not user_message:
+        #         return HTMLResponse('')
 
-            document_context = get_document_context(user_message)
-            bot_message = get_bot_response(user_message, document_context, chat)
+        #     document_context = get_document_context(user_message)
+        #     bot_message = get_bot_response(user_message, document_context, chat)
 
-            new_messages = [Message(text=user_message, sender=Sender.USER.name, chat_id=chat.id),
-                            Message(text=bot_message, sender=Sender.BOT.name, chat_id=chat.id)]
-            for m in new_messages:
-                session.add(m)
-            session.commit()
-            session.refresh(chat)
-            context['messages'] = list(reversed(chat.messages))
-            return templates.TemplateResponse('chat_table.html', context)
-
+        #     new_messages = [Message(text=user_message, sender=Sender.USER.name, chat_id=chat.id),
+        #                     Message(text=bot_message, sender=Sender.BOT.name, chat_id=chat.id)]
+        #     for m in new_messages:
+        #         session.add(m)
+        #     session.commit()
+        #     session.refresh(chat)
+        #     context['messages'] = list(reversed(chat.messages))
+        #     return templates.TemplateResponse('chat_table.html', context)
+    print(chat.message_history())
     return templates.TemplateResponse('chat.html', context)
 
 

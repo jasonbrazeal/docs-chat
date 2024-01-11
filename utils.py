@@ -20,8 +20,10 @@ from openai.types.chat.chat_completion_message_param import ChatCompletionMessag
 from pandas import DataFrame
 from pypdf import PdfReader
 from spacy.lang.en import English
+from sqlmodel import Session, select
 
-from db import Chat, DATA_DIR
+from db import Chat, DATA_DIR, DB_ENGINE, Message
+
 
 logging.basicConfig()
 logging.getLogger().setLevel(getenv('LOGLEVEL', 'INFO'))
@@ -250,3 +252,33 @@ def check_api_key() -> None:
 
 def set_api_key(api_key: str) -> None:
     LLM_CLIENT.api_key = api_key
+
+from db import Sender
+
+def handle_user_message(user_message: str, history: List[List[str | None | Tuple]]) -> str:
+    print(user_message)
+    print(history)
+    document_context = get_document_context(user_message)
+
+    with Session(DB_ENGINE) as session:
+        statement = select(Chat).order_by(Chat.created_at.desc()).limit(1)
+        results = session.exec(statement)
+        chats = list(results)
+        if chats:
+            chat = chats[0]
+        else:
+            return 'Error: no chats found in db'
+
+        bot_message = get_bot_response(user_message, document_context, chat)
+        new_messages = [Message(text=user_message, sender=Sender.USER.name, chat_id=chat.id),
+                        Message(text=bot_message, sender=Sender.BOT.name, chat_id=chat.id)]
+        for m in new_messages:
+            session.add(m)
+        session.commit()
+        session.refresh(chat)
+    return bot_message
+
+
+# As input: passes the messages in the Chatbot as a List[List[str | None | Tuple]], i.e. a list of lists. The inner list has 2 elements: the user message and the response message. See Postprocessing for the format of these messages.
+
+# As output: expects function to return a List[List[str | None | Tuple]], i.e. a list of lists. The inner list should have 2 elements: the user message and the response message. The individual messages can be (1) strings in valid Markdown, (2) tuples if sending files: (a filepath or URL to a file, [optional string alt text]) -- if the file is image/video/audio, it is displayed in the Chatbot, or (3) None, in which case the message is not displayed.

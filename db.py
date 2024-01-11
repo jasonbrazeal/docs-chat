@@ -19,7 +19,7 @@ DB_PATH: Path = DATA_DIR / 'chat.db'
 DB_URL = f'sqlite:///{DB_PATH}'
 DB_ENGINE: Engine = create_engine(
     DB_URL, echo=logging.getLogger().isEnabledFor(logging.DEBUG),
-    connect_args={'check_same_thread': DB_URL.startswith('sqlite')},
+    connect_args={'check_same_thread': False},
 )
 
 
@@ -38,6 +38,30 @@ class Chat(SQLModel, table=True):
 
     def user_messages(self):
         return [message for message in self.messages if message.sender == Sender.USER]
+
+    def message_history(self):
+        # this history is used in the gradio widget which expects this format
+        # chats always start with a bot message
+        history = [] # [[user_message, bot_message]]
+        message_pair = []
+        for i, message in enumerate(self.messages):
+            if i == 0:
+                if message.sender != Sender.BOT:
+                    logger.error(f'The first message in chat {self.id} is a user message, not a BOT message: {message.text}')
+                else:
+                    history.append([None, message.text])
+                continue
+            if message.sender == Sender.USER:
+                message_pair.append(message.text)
+            else:
+                message_pair.append(message.text)
+                history.append(message_pair)
+                message_pair = []
+        # handle case where chat ends with a user message (not likely in normal chats, but possible)
+        if message_pair:
+            history.append([message_pair[1], None])
+
+        return history
 
 
 class Message(SQLModel, table=True):
