@@ -70,11 +70,14 @@ function validateFiles(files) {
 
 
 function dropHandler(ev) {
-  console.log("File(s) dropped");
-
   // Prevent default behavior (Prevent file from being opened)
   ev.preventDefault();
   ev.stopPropagation();
+
+  console.log("File(s) dropped");
+
+  const spinner = document.getElementById('backdrop');
+  spinner.classList.remove('hide');
 
   [...ev.dataTransfer.files].forEach((file, i) => {
     console.log(`… file[${i}].name = ${file.name}`);
@@ -98,7 +101,7 @@ function dragOnHandler(ev) {
   ev.preventDefault();
   ev.stopPropagation();
   const dropZone = document.getElementById('drop-zone');
-  dropZone.classList.add('drop-zone-dragging')
+  dropZone.classList.add('drop-zone-dragging');
 }
 
 function dragOffHandler(ev) {
@@ -106,7 +109,7 @@ function dragOffHandler(ev) {
   ev.preventDefault();
   ev.stopPropagation();
   const dropZone = document.getElementById('drop-zone');
-  dropZone.classList.remove('drop-zone-dragging')
+  dropZone.classList.remove('drop-zone-dragging');
 }
 
 function clearDocsSubmit() {
@@ -116,7 +119,7 @@ function clearDocsSubmit() {
 
 function clearDocsSubmitOnEnter(e) {
   if (e.code === 'Enter') {
-    clearDocsSubmit()
+    clearDocsSubmit();
   }
 }
 
@@ -170,8 +173,8 @@ document.addEventListener('DOMContentLoaded', function() {
         M.toast({text: error, displayLength: 10000});
         input.files = null;
       } else {
-        const loader = document.getElementById("loader");
-        loader.classList.remove("hide");
+        const spinner = document.getElementById('backdrop');
+        spinner.classList.remove('hide');
         form.submit();
       }
     });

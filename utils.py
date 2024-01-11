@@ -33,9 +33,10 @@ LLM_CLIENT: OpenAI = OpenAI(api_key='')
 LLM_TEMPERATURE: int = 0
 LLM_MAX_TOKENS: int = 150
 VECTOR_DB_PATH: Path = DATA_DIR / 'vectorstore'
-VECTOR_DB_CLIENT: ClientAPI = PersistentClient(path=str(VECTOR_DB_PATH), settings=Settings(anonymized_telemetry=False))
+VECTOR_DB_CLIENT: ClientAPI = PersistentClient(path=str(VECTOR_DB_PATH), settings=Settings(allow_reset=True, anonymized_telemetry=False))
 MAX_TOKENS_PER_CHUNK: int = 100
-
+SYSTEM_PROMPT = 'You are a helpful AI bot that a user can chat with. You answer questions for the user based on your knowledge supplemented with any context given before the question. You may ask the user clarifying questions if needed to understand the question, or simply respond "I don\'t know" if you don\'t have an accurate answer. Do not mention that a context was provided, just try to use it to inform your responses.'
+PROMPT = 'Context: {}\n\n---\n\nQuestion: {}\nAnswer:'
 
 def process_pdf_bytes(file_bytes: BytesIO, filename: str):
     """
@@ -195,13 +196,12 @@ def get_bot_response(user_message: str, document_context: List[str], chat: Chat)
     for m in chat.messages:
         mdict: ChatCompletionMessageParam = {'role': 'user', 'content': m.text}
         prev_messages.append(mdict)
-    system_prompt = 'You are a helpful AI bot that a user can chat with. You answer questions for the user based on any context given before the question. You may ask the user clarifying questions if needed to understand the question, or simply respond "I don\'t know" if you don\'t have an accurate answer. You shouldn\'t say "based on the provided context" or similar phrases, since the user knows you have the context for the answers.'
-    prompt = f'Context: {document_context}\n\n---\n\nQuestion: {user_message}\nAnswer:'
-    logger.debug(prompt)
+    current_prompt = PROMPT.format(document_context, user_message)
+    logger.debug(current_prompt)
     messages: List[ChatCompletionMessageParam] = [
-        {'role': 'system', 'content': system_prompt},
+        {'role': 'system', 'content': SYSTEM_PROMPT},
         *prev_messages,
-        {'role': 'user', 'content': prompt}
+        {'role': 'user', 'content': current_prompt}
     ]
     try:
         response = LLM_CLIENT.chat.completions.create(

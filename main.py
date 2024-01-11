@@ -6,7 +6,9 @@ from pathlib import Path
 from shutil import rmtree
 from typing import Annotated, Optional
 
-from fastapi import FastAPI, Header, Request, UploadFile
+from chromadb import PersistentClient
+from chromadb.config import Settings
+from fastapi import FastAPI, Header, Request, UploadFile, BackgroundTasks
 from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -17,7 +19,7 @@ from sqlmodel import Session, select
 
 from db import ApiKey, Chat, Message, PdfDocument, Sender, DB_ENGINE, DATA_DIR
 from utils import (check_api_key, get_bot_response, get_document_context, save_to_file,
-                   process_pdf_bytes, set_api_key, slugify)
+                   process_pdf_bytes, set_api_key, slugify, VECTOR_DB_PATH, VECTOR_DB_CLIENT)
 
 logging.basicConfig()
 logging.getLogger().setLevel(getenv('LOGLEVEL', 'INFO'))
@@ -206,7 +208,7 @@ async def documents(request: Request, hx_request: Optional[str] = Header(None)):
 
 
 @app.post('/upload')
-async def upload(request: Request, documents: list[UploadFile], hx_request: Optional[str] = Header(None)):
+async def upload(request: Request, documents: list[UploadFile], background_tasks: BackgroundTasks, hx_request: Optional[str] = Header(None)):
     if not DOCS_PATH.exists():
         DOCS_PATH.mkdir(parents=True)
     total_bytes: float = 0
@@ -227,8 +229,8 @@ async def upload(request: Request, documents: list[UploadFile], hx_request: Opti
             session.add(doc)
             session.commit()
 
-            process_pdf_bytes(file_bytes, doc.filename)
-            save_to_file(file_bytes, slugify(doc.filename), DOCS_PATH)
+            background_tasks.add_task(process_pdf_bytes, file_bytes, doc.filename)
+            background_tasks.add_task(save_to_file, file_bytes, slugify(doc.filename), DOCS_PATH)
 
     return RedirectResponse('/documents', status_code=302)
 
@@ -243,7 +245,9 @@ async def clear(request: Request, hx_request: Optional[str] = Header(None)):
         session.commit()
     rmtree(str(DOCS_PATH), ignore_errors=True)
     DOCS_PATH.mkdir(parents=True)
-    return RedirectResponse(request.url_for('documents'), status_code=302)
+    global VECTOR_DB_CLIENT
+    VECTOR_DB_CLIENT.reset()
+    return RedirectResponse('/documents', status_code=302)
 
 
 if __name__ == '__main__':
