@@ -172,7 +172,7 @@ async def chat(request: Request, hx_request: Optional[str] = Header(None)):
         if chats:
             chat = chats[0]
             context['chat'] = chat
-            context['messages'] = list(reversed(chat.messages))
+            context['messages'] = list(chat.messages)
         else:
             return RedirectResponse('/chat/new', status_code=302)
 
@@ -191,7 +191,7 @@ async def chat(request: Request, hx_request: Optional[str] = Header(None)):
                 session.add(m)
             session.commit()
             session.refresh(chat)
-            context['messages'] = list(reversed(chat.messages))
+            context['messages'] = list(chat.messages)
             return templates.TemplateResponse('chat_table.html', context)
 
     return templates.TemplateResponse('chat.html', context)

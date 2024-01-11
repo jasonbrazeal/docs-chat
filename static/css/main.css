@@ -1,9 +1,79 @@
+@import url('https://fonts.googleapis.com/css2?family=Saira&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cookie&display=swap');
+
 html, body {
   height: 100%;
+  color: #444;
+  font-family: 'Saira', sans-serif;
 }
 
-#chat-container button {
-display: inline-block;
+.logo-name {
+  font-weight: 700;
+  font-size: 3rem;
+}
+
+.btn {
+  font-family: 'Saira', sans-serif;
+}
+
+.nav-wrapper img {
+  height: 3rem;
+  width: 3rem;
+  position: relative;
+  top: .5rem;
+  margin-left: 1rem;
+}
+
+#index h2 {
+  font-family: 'Cookie', cursive;
+  margin: 5rem 0 3rem;
+  font-size: 5rem;
+}
+
+#action-items a {
+  color: #1a237e;
+}
+
+#blurb {
+  font-size: 1.25rem;
+}
+
+#user-message {
+  height: 2.65rem;
+  width: 75%;
+  position: relative;
+  top: 0.12em;
+  padding: 1rem;
+}
+
+#submit-message {
+  position: relative;
+  left: -.5em;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+@media screen and (max-width: 1167px) {
+
+  #user-message {
+    width: 50%;
+  }
+
+}
+
+#chatbot-buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#current-chat-container {
+  height: 50vh;
+  overflow: scroll;
+}
+
+#chatbot-buttons button {
+  margin: 3rem;
 }
 
 #chat-backdrop.htmx-indicator {
@@ -39,29 +109,70 @@ display: inline-block;
   top: 50%;
 }
 
-#drop-zone {
-    border: 5px solid #303030;
-  }
-
 #drop-zone img {
-    width: 25px;
-    height: 25px;
+    width: 4rem;
+    height: 4rem;
 }
 
-.drop-zone-dragging {
-  background-color: #1a5e2025;
+#drop-zone {
+  position: relative;
+  display: flex;
+  gap: 10px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  padding: 20px;
+  border-radius: 10px;
+  border: 2px dashed #555;
+  transition: background .2s ease-in-out, border .2s ease-in-out;
+  margin: 2rem auto;
+}
+
+#drop-zone:hover, .drop-zone-dragging {
+  background: #eee;
+  border-color: #111;
+}
+
+#drop-zone:hover .drop-title {
+  color: #222;
+}
+
+.drop-title {
+  font-size: 20px;
+  font-weight: bold;
+  text-align: center;
+  transition: color .2s ease-in-out;
+}
+
+#clear-all-trigger {
+  margin: 1rem auto;
+  display: flex;
+}
+
+#file-input-button {
+  display: flex;
+  margin: 1rem;
 }
 
 #history-table tr:hover {
   background-color: #1a5e2025;
 }
 
-#index {
-  display: grid;
+#blurb {
+  width: 60%;
+  margin: 2rem auto;
+}
+
+#action-items a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 #settings-actions .btn.modal-trigger {
   width: 8em;
+  margin: 2rem auto;
 }
 
 .api-key-check {

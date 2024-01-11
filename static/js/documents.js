@@ -89,9 +89,9 @@ function dropHandler(ev) {
   if (error) {
     M.toast({text: error, displayLength: 10000});
     input.files = null;
+    spinner.classList.add("hide");
   } else {
-    const loader = document.getElementById("loader");
-    loader.classList.remove("hide");
+    spinner.classList.remove("hide");
     form.submit();
   }
 }
@@ -169,11 +169,12 @@ document.addEventListener('DOMContentLoaded', function() {
       e.preventDefault();
       e.stopPropagation();
       const error = validateFiles(input.files);
+      const spinner = document.getElementById('backdrop');
       if (error) {
         M.toast({text: error, displayLength: 10000});
         input.files = null;
+        spinner.classList.add('hide');
       } else {
-        const spinner = document.getElementById('backdrop');
         spinner.classList.remove('hide');
         form.submit();
       }

@@ -4,29 +4,28 @@
 
     <h2>Chat</h2>
 
-    <form id="chat-form" hx-post="/chat" hx-target="#chat-table" hx-indicator="#chat-backdrop">
-        <label>
-            Enter your message:
-            <input type="text" name="user_message" minlength="1" maxlength="200" required>
-        </label>
-        <input id="chat-form-submit" type="submit" class="hide" />
-    </form>
-    <button id="submit-message">Submit</button>
-    <a href="/history"><button>View Chat History</button></a>
-    <a href="/chat/new"><button>Start New Chat</button></a>
-    <table class="">
-        <thead class="">
-            <tr>
-                <th class="">Sender</th>
-                <th class="">Message</th>
-            </tr>
-            </thead>
+    <div id="current-chat-container" class="container">
+        <table class="">
             <tbody class="" id="chat-table">
                 {% if chat %}
                 {% include 'chat_table.html' %}
                 {% endif %}
             </tbody>
-    </table>
+        </table>
+    </div>
+
+    <form id="chat-form" hx-post="/chat" hx-target="#chat-table" hx-indicator="#chat-backdrop">
+        <label>
+            Enter your message:
+            <input type="text" name="user_message" id="user-message" minlength="1" maxlength="200" required>
+        </label>
+        <input id="chat-form-submit" type="submit" class="hide" />
+        <button class="btn modal-trigger indigo darken-4" id="submit-message">Submit</button>
+    </form>
+    <div id="chatbot-buttons">
+        <a href="/chat/new"><button class="btn modal-trigger indigo darken-4">Start New Chat</button></a>
+        <a href="/history"><button class="btn modal-trigger indigo darken-4">View Chat History</button></a>
+    </div>
 </div>
 
 <div id="chat-backdrop" class="htmx-indicator">

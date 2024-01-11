@@ -10,6 +10,9 @@ htmx.on("htmx:afterRequest", function(evt) {
     console.log("The event that triggered the request: ", evt.detail.requestConfig.triggeringEvent);
     console.log("True if the response has a 20x status code or is marked detail.isError = false in the htmx:beforeSwap event, else false: ", evt.detail.successful);
     console.log("true if the response does not have a 20x status code or is marked detail.isError = true in the htmx:beforeSwap event, else false: ", evt.detail.failed);
+
+    let chat = document.getElementById("current-chat-container");
+    chat.scrollTop = chat.scrollHeight;
 });
 
 htmx.on("htmx:onLoadError", function(evt) {
@@ -36,5 +39,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const chatFormSubmit = document.getElementById('chat-form-submit');
     chatFormSubmit.click();
   });
+
+  const userMessage = document.getElementById('user-message');
+  userMessage.focus()
 
 });

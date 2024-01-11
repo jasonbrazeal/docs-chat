@@ -5,23 +5,31 @@
         <h2 class="col s12">Documents</h2>
     </div>
 
-    <div class="row">
-        <div id="drop-zone" class="col s12">
-            <img src="static/images/upload.svg">
-            <p class="col s5">Drag file(s) here to upload or</p>
-            <form id="document-form" action="/upload" method="post" enctype="multipart/form-data">
-                <input type="file" name="documents" multiple hidden>
-                <button class="btn indigo darken-4">Select files from your device</button>
-                <!-- <progress id="progress" value="0" max="100"></progress> -->
-            </form>
-        </div>
+    <div id="drop-zone">
+        <img id="upload-image" src="static/images/upload.svg">
+        <form id="document-form" action="/upload" method="post" enctype="multipart/form-data">
+            <label for="documents">
+                <span class="drop-title">Drag file(s) here or</span>
+                <input type="file" name="documents" id="documents" multiple hidden>
+                <button class="btn indigo darken-4" id="file-input-button">Browse device</button>
+            </label>
+            <!-- <progress id="progress" value="0" max="100"></progress> -->
+        </form>
     </div>
 
-    {% for doc in documents %}
-    <div class="row document">{{ doc.filename }}</div>
-    {% endfor %}
     {% if documents %}
     <button data-target="clear-docs-modal" class="btn modal-trigger indigo darken-4" id="clear-all-trigger">Clear all documents</button>
+    <table class="">
+        <thead class="">
+            <tr>
+                <th class="">Filename</th>
+                <th class="">Uploaded</th>
+            </tr>
+            </thead>
+            <tbody class="" id="doc-table">
+                {% include 'doc_table.html' %}
+            </tbody>
+    </table>
     {% endif %}
 
 </div>
