@@ -35,3 +35,27 @@ If you'd like to discuss anything related to this project, you can reach me thro
 dev@jasonbrazeal.com
 https://www.linkedin.com/in/jasonbrazeal
 https://jasonbrazeal.com
+
+## Screenshots
+
+* home page
+![home page](/screenshots/home.png)
+
+* chat before uploading documents
+![chat before uploading documents](/screenshots/chat_before.png)
+
+* chat after uploading documents
+![chat after uploading documents](/screenshots/chat_after.png)
+
+* document upload
+![document upload](/screenshots/documents.png)
+
+* chat history
+![chat history](/screenshots/history.png)
+
+* individual chat history
+![individual chat history](/screenshots/history_modal.png)
+
+* settings
+![settings](/screenshots/settings.png)
+
