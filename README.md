@@ -16,7 +16,7 @@ OpenAI's GPT models are certainly a good starting point, but there are many othe
 
 ### Prompt Engineering
 
-The simple prompt I created for this can most definitely be optimized. We used different techniques at my last job to refine the prompt and reduce the amount of hallucination and generally make the model's responses more relevant and of higher quality. One such technique is to use the ReAct framework with chain-of-thought prompting, which essentially prompts the LLM to form a series and thought-action pairs and reason about them to arrive at a final response. I think a next step with Docs Chat would be to integrate this type of prompting with the additional document context provided by the vector database lookup.
+The simple prompt I created for this can most definitely be optimized. We used different techniques at my last job to refine the prompt and reduce the amount of hallucination and generally make the model's responses more relevant and of higher quality. One such technique is to use the ReAct framework with chain-of-thought prompting, which essentially prompts the LLM to form a series of thought-action pairs and reason about them to arrive at a final response. I think a next step with Docs Chat would be to integrate this type of prompting with the additional document context provided by the vector database lookup.
 
 ### RAG Enhancements
 
@@ -32,9 +32,9 @@ Chatbots have pretty well-established UX/UI patterns at this point. Docs Chat wo
 
 If you'd like to discuss anything related to this project, you can reach me through email or LinkedIn.
 
-dev@jasonbrazeal.com
-https://www.linkedin.com/in/jasonbrazeal
-https://jasonbrazeal.com
+* dev@jasonbrazeal.com
+* https://www.linkedin.com/in/jasonbrazeal
+* https://jasonbrazeal.com
 
 ## Screenshots
 
