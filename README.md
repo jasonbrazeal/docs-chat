@@ -8,7 +8,7 @@ It's an asynchronous Python web application (FastAPI, SQLModel) that uses OpenAI
 
 ## Improvements
 
-If this application was developed for a real business use case, there would be specific requirements and a plan of work with milestones that I would be working toward. In this case, I'm just going to suggest a few improvements that I would likely consider for almost any use case.
+If this application was developed for a real business use case, there would be specific requirements and a plan of work with milestones that I would be working toward. In this case, I'm just going to suggest a few improvements that may be applicable to many different use cases.
 
 ### Choice of LLM
 
@@ -16,7 +16,11 @@ OpenAI's GPT models are certainly a good starting point, but there are many othe
 
 ### Prompt Engineering
 
-The simple prompt I created for this can most definitely be optimized. We used different techniques at my last job to refine the prompt and reduce the amount of hallucination and generally make the model's responses more relevant and of higher quality. One such technique is to use the ReAct framework with chain-of-thought prompting, which essentially prompts the LLM to form a series of thought-action pairs and reason about them to arrive at a final response. I think a next step with Docs Chat would be to integrate this type of prompting with the additional document context provided by the vector database lookup.
+The simple prompt I created for this can most definitely be optimized. We used different techniques at my last job to refine the prompt and reduce the amount of hallucination and generally make the model's responses more relevant and of higher quality. One such technique is to use the ReAct framework with chain-of-thought prompting, which essentially prompts the LLM to form a series of thought-action pairs and reason about them to arrive at a final response. Another technique is to use in-context learning by providing examples of text or formats the model should output (zero/one/few-shot inference). I think a next step with Docs Chat would be to integrate these type of prompting with the additional document context provided by the vector database lookup.
+
+### Fine-tuning
+
+If you have a dataset available with conversations that are similar to those you'd like the chatbot to have, then fine-tuning could be a good option. Fine-tuning entails alters the weights of the model by training it on your specific data, and it can result in better performance than using the base model. While this does allow you to customize the model, it comes with additional training and maintenance costs.
 
 ### RAG Enhancements
 
