@@ -1,6 +1,6 @@
 # Docs Chat
 
-Docs Chat is a small application I created to have a demo of the kind of things I have been working on lately. It is not a production-ready application; there are no tests and no optimizations on the LLM or RAG side of things. Out of the box, it is essentially a wrapper around an LLM. But once you upload your own documents, the LLM then gets the relevant context from your documents which enables it to assist in a much more productive way. These documents could be proprietary business information or data, more up-to-date news articles (GPT-4 Turbo's cutoff date is April 2023), or anything else you want the AI to be able to discuss. Again, I do not intend for Docs Chat to be used in a production environment, but rather as a starting point for discussion about retrieval-augmented generation applications.
+Docs Chat is a small webapp I created to demo basic RAG with LLMs. It is not a production-ready application; there are no tests and no optimizations on the LLM or RAG side of things. Out of the box, it is essentially a wrapper around an LLM. But once you upload your own documents, the LLM then gets the relevant context from your documents which enables it to assist in a much more productive way. These documents could be proprietary business information or data, more up-to-date news articles (GPT-4 Turbo's cutoff date is April 2023), or anything else you want the AI to be able to discuss. Again, I do not intend for Docs Chat to be used in a production environment, but rather as a starting point for discussion about retrieval-augmented generation applications.
 
 ## How It Works
 
@@ -20,7 +20,7 @@ The simple prompt I created for this can most definitely be optimized. We used d
 
 ### Fine-tuning
 
-If you have a dataset available with conversations that are similar to those you'd like the chatbot to have, then fine-tuning could be a good option. Fine-tuning entails alters the weights of the model by training it on your specific data, and it can result in better performance than using the base model. While this does allow you to customize the model, it comes with additional training and maintenance costs.
+If you have a dataset available with conversations that are similar to those you'd like the chatbot to have, then fine-tuning could be a good option. Fine-tuning entails adjusting the weights of the model by training it on your specific data, and it can result in better performance than using the base model. While this does allow you to customize the model, it comes with additional training and maintenance costs.
 
 ### RAG Enhancements
 
